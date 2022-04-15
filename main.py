@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.widgets import CheckButtons
 from cubic_spline_2d import *
-from lagrange_polynomial import *
+from lagrange_interpolation_2d import *
+from newton_interpolation_2d import *
 from scipy.interpolate import lagrange
 import numpy as np
 
@@ -19,14 +20,28 @@ def calculate_2d_spline_interpolation(x, y, num=100):
     return result_x, result_y
 
 
-def calculate_2d_lagrange_polynom(x_points, y_points, num):
-    new_y_points = np.linspace(y_points[0], y_points[-1], num)
-    new_x_points = np.linspace(x_points[0], x_points[-1], num)
-    lagrange = LagrangePolynomial(x_points, y_points)
-    L = []
-    for x in new_x_points:
-        L.append(lagrange.calc_polynomial_at_x(x))
-    return new_x_points, L
+def calculate_2d_lagrange_polynom(x_points, y_points, num=100):
+    lagrange_2d = LagrangeInterpolation2D(x_points, y_points)
+    params = np.linspace(lagrange_2d.params[0], lagrange_2d.params[-1], num + 1)
+    result_x, result_y = [], []
+    for param in params:
+        point_x, point_y = lagrange_2d.point(param)
+        result_x.append(point_x)
+        result_y.append(point_y)
+
+    return result_x, result_y
+
+
+def calculate_2d_newton_polynom(x_points, y_points, num=100):
+    newton_2d = NewtonInterpolation2D(x_points, y_points)
+    params = np.linspace(newton_2d.params[0], newton_2d.params[-1], num + 1)
+    result_x, result_y = [], []
+    for param in params:
+        point_x, point_y = newton_2d.point(param)
+        result_x.append(point_x)
+        result_y.append(point_y)
+
+    return result_x, result_y
 
 
 if __name__ == '__main__':
@@ -36,10 +51,11 @@ if __name__ == '__main__':
 
     np.seterr(over='raise')
 
-    curve, = ax.plot(x_points, y_points, "-g", label="spline")
-    curve_lagrange, = ax.plot(x_points, y_points, "-r", label="lagrange")
+    curve, = ax.plot(x_points, y_points, "-g", label="spline (g)")
+    curve_lagrange, = ax.plot(x_points, y_points, "-r", label="lagrange (r)")
+    curve_newton, = ax.plot(x_points, y_points, "-m", label="newton (m)")
     points, = ax.plot(x_points, y_points, "x")
-    lines = [curve, curve_lagrange]
+    lines = [curve, curve_lagrange, curve_newton]
     rax = plt.axes([0.0, 0.9, 0.1, 0.1])
     labels = [str(line.get_label()) for line in lines]
     visibility = [line.get_visible() for line in lines]
@@ -55,10 +71,13 @@ if __name__ == '__main__':
         if len(x_points) > 1 and len(x_points) == len(y_points):
             x_curve_points, y_curve_points = calculate_2d_spline_interpolation(x_points, y_points, num=10000)
             x_lagrange_curve_points, y_lagrange_curve_points = calculate_2d_lagrange_polynom(x_points, y_points, num=500)
+            x_newton_curve_points, y_newton_curve_points = calculate_2d_newton_polynom(x_points, y_points, num=500)
             curve.set_xdata(x_curve_points)
             curve.set_ydata(y_curve_points)
             curve_lagrange.set_xdata(x_lagrange_curve_points)
             curve_lagrange.set_ydata(y_lagrange_curve_points)
+            curve_newton.set_xdata(x_newton_curve_points)
+            curve_newton.set_ydata(y_newton_curve_points)
 
         points.set_xdata(x_points)
         points.set_ydata(y_points)
